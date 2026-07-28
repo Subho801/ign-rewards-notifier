@@ -26,7 +26,7 @@ HEADERS = {
 }
 
 # Replace these with your own images
-AUTHOR_ICON = "https://file.garden/afbSsuts32dZ5wSl/153-1538626_transparent-white-ign-logo-hd-png-download.png"
+AUTHOR_ICON = "https://file.garden/afbSsuts32dZ5wSl/images%20(3).png"
 FOOTER_ICON = "https://files.catbox.moe/qttqpy.png"
 
 EMBED_COLOR = 0xBF1313
