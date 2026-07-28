@@ -11,33 +11,37 @@ headers = {
     )
 }
 
+print("Downloading IGN Rewards page...")
+
 response = requests.get(URL, headers=headers, timeout=30)
 response.raise_for_status()
 
+print(f"Status Code: {response.status_code}")
+
 soup = BeautifulSoup(response.text, "lxml")
 
-buttons = soup.select("button.reward-button")
+cards = soup.select('[data-cy="rewardCard"]')
 
-print(f"Found {len(buttons)} rewards\n")
+print(f"\nFound {len(cards)} reward cards\n")
 
-for i, button in enumerate(buttons, start=1):
+for i, card in enumerate(cards, start=1):
 
-    title = " ".join(button.stripped_strings)
-
-    image = None
-
-    img = button.find("img")
-
-    if img:
-        image = (
-            img.get("src")
-            or img.get("data-src")
-            or img.get("data-lazy-src")
-        )
+    title = card.select_one('[data-cy="cardTitle"]')
+    image = card.select_one('[data-cy="rewardImg"] img')
+    end_date = card.select_one('[data-cy="endDate"]')
+    availability = card.select_one('[data-cy="availability"]')
 
     print("=" * 70)
-    print("TITLE:")
-    print(title)
+    print(f"Reward #{i}")
+
+    print("\nTITLE:")
+    print(title.get_text(strip=True) if title else "None")
 
     print("\nIMAGE:")
-    print(image)
+    print(image.get("src") if image else "None")
+
+    print("\nEND DATE:")
+    print(end_date.get_text(strip=True) if end_date else "None")
+
+    print("\nAVAILABILITY:")
+    print(availability.get_text(strip=True) if availability else "None")
