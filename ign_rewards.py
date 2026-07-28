@@ -1,0 +1,1 @@
+print("IGN Rewards Notifier")
