@@ -26,8 +26,8 @@ HEADERS = {
 }
 
 # Replace these with your own images
-AUTHOR_ICON = "https://YOUR_IGN_LOGO.png"
-FOOTER_ICON = "https://YOUR_RONALDO_IMAGE.png"
+AUTHOR_ICON = "https://file.garden/afbSsuts32dZ5wSl/7VFA9sqs.png"
+FOOTER_ICON = "https://files.catbox.moe/qttqpy.png"
 
 EMBED_COLOR = 0xBF1313
 
