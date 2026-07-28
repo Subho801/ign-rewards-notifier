@@ -21,20 +21,23 @@ buttons = soup.select("button.reward-button")
 print(f"Found {len(buttons)} rewards\n")
 
 for i, button in enumerate(buttons, start=1):
+
     title = " ".join(button.stripped_strings)
 
-    link = None
+    image = None
 
-    parent = button.parent
-    while parent:
-        if parent.name == "a":
-            link = parent.get("href")
-            break
-        parent = parent.parent
+    img = button.find("img")
+
+    if img:
+        image = (
+            img.get("src")
+            or img.get("data-src")
+            or img.get("data-lazy-src")
+        )
 
     print("=" * 70)
     print("TITLE:")
     print(title)
 
-    print("\nLINK:")
-    print(link)
+    print("\nIMAGE:")
+    print(image)
