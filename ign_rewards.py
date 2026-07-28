@@ -94,34 +94,10 @@ def discord_timestamp(date_string):
 
 
 def availability_text(text):
-
     if not text:
         return "Unknown"
 
-    t = text.lower()
-
-    if "world" in t:
-        return f"🌍 {text}"
-
-    if "global" in t:
-        return f"🌍 {text}"
-
-    if "us" in t:
-        return f"🇺🇸 {text}"
-
-    if "uk" in t:
-        return f"🇬🇧 {text}"
-
-    if "canada" in t:
-        return f"🇨🇦 {text}"
-
-    if "europe" in t:
-        return f"🌍 {text}"
-
-    if "australia" in t:
-        return f"🇦🇺 {text}"
-
-    return f"📍 {text}"
+    return text
 
 
 def fix_image_url(url):
@@ -142,7 +118,7 @@ def send_discord(title, image, end_date, availability):
     "icon_url": AUTHOR_ICON
 },
 
-"title": f"🎁 {title}",
+"title": title,
 "url": URL,
         "color": EMBED_COLOR,
 
@@ -153,7 +129,7 @@ def send_discord(title, image, end_date, availability):
                 "inline": True
             },
             {
-                "name": "Availability",
+                "name": "Status",
                 "value": availability_text(availability),
                 "inline": True
             }
@@ -168,7 +144,6 @@ def send_discord(title, image, end_date, availability):
             "icon_url": FOOTER_ICON
         },
 
-        "timestamp": datetime.now().astimezone().isoformat(),
 
         "url": URL
     }
