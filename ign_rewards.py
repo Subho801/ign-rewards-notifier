@@ -11,27 +11,30 @@ headers = {
     )
 }
 
-print("Downloading IGN Rewards page...")
-
 response = requests.get(URL, headers=headers, timeout=30)
 response.raise_for_status()
 
-print(f"Status Code: {response.status_code}")
-
 soup = BeautifulSoup(response.text, "lxml")
-
-print("\nPage title:")
-print(soup.title.string if soup.title else "No title")
-
-print("\nLooking for reward buttons...\n")
 
 buttons = soup.select("button.reward-button")
 
-print(f"Found {len(buttons)} reward buttons.\n")
+print(f"Found {len(buttons)} rewards\n")
 
 for i, button in enumerate(buttons, start=1):
-    text = " ".join(button.stripped_strings)
+    title = " ".join(button.stripped_strings)
 
-    print("=" * 60)
-    print(f"Reward #{i}")
-    print(text)
+    link = None
+
+    parent = button.parent
+    while parent:
+        if parent.name == "a":
+            link = parent.get("href")
+            break
+        parent = parent.parent
+
+    print("=" * 70)
+    print("TITLE:")
+    print(title)
+
+    print("\nLINK:")
+    print(link)
