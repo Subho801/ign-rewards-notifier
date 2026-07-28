@@ -1,10 +1,21 @@
 import json
 import os
+from datetime import datetime
+from urllib.parse import urljoin
+from zoneinfo import ZoneInfo
+
 import requests
 from bs4 import BeautifulSoup
 
+# ==========================
+# Configuration
+# ==========================
+
 URL = "https://www.ign.com/rewards"
+
 WEBHOOK = os.getenv("DISCORD_WEBHOOK")
+
+DB_FILE = "posted_rewards.json"
 
 HEADERS = {
     "User-Agent": (
@@ -14,8 +25,16 @@ HEADERS = {
     )
 }
 
-DB_FILE = "posted_rewards.json"
+# Replace these with your own images
+AUTHOR_ICON = "https://YOUR_IGN_LOGO.png"
+FOOTER_ICON = "https://YOUR_RONALDO_IMAGE.png"
 
+EMBED_COLOR = 0xBF1313
+
+
+# ==========================
+# Database
+# ==========================
 
 def load_posted():
     if not os.path.exists(DB_FILE):
@@ -33,49 +52,159 @@ def save_posted(data):
         json.dump(data, f, indent=2)
 
 
+# ==========================
+# Helpers
+# ==========================
+
+def discord_timestamp(date_string):
+    """
+    Converts:
+    08.03.2026 at 10:30AM
+
+    into
+
+    <t:UNIX:F>
+    <t:UNIX:R>
+
+    IGN uses Pacific Time.
+    """
+
+    if not date_string or date_string == "Unknown":
+        return "Unknown"
+
+    try:
+        dt = datetime.strptime(
+            date_string,
+            "%m.%d.%Y at %I:%M%p"
+        )
+
+        dt = dt.replace(
+            tzinfo=ZoneInfo("America/Los_Angeles")
+        )
+
+        unix = int(dt.timestamp())
+
+        return (
+            f"<t:{unix}:F>\n"
+            f"(<t:{unix}:R>)"
+        )
+
+    except Exception:
+        return date_string
+
+
+def availability_text(text):
+
+    if not text:
+        return "Unknown"
+
+    t = text.lower()
+
+    if "world" in t:
+        return f"🌍 {text}"
+
+    if "global" in t:
+        return f"🌍 {text}"
+
+    if "us" in t:
+        return f"🇺🇸 {text}"
+
+    if "uk" in t:
+        return f"🇬🇧 {text}"
+
+    if "canada" in t:
+        return f"🇨🇦 {text}"
+
+    if "europe" in t:
+        return f"🌍 {text}"
+
+    if "australia" in t:
+        return f"🇦🇺 {text}"
+
+    return f"📍 {text}"
+
+
+def fix_image_url(url):
+
+    if not url:
+        return ""
+
+    return urljoin(URL, url)
+
 def send_discord(title, image, end_date, availability):
 
+    if not WEBHOOK:
+        raise RuntimeError("DISCORD_WEBHOOK environment variable is missing.")
+
     embed = {
-        "title": "🎁 New IGN Reward",
-        "color": 0xE50914,
+        "author": {
+            "name": "IGN Rewards",
+            "url": URL,
+            "icon_url": AUTHOR_ICON
+        },
+
+        "description": f"## 🎁 {title}",
+
+        "color": EMBED_COLOR,
+
         "fields": [
             {
-                "name": "Reward",
-                "value": title,
-                "inline": False
-            },
-            {
-                "name": "Ends",
-                "value": end_date,
+                "name": "⏰ Ends",
+                "value": discord_timestamp(end_date),
                 "inline": True
             },
             {
-                "name": "Availability",
-                "value": availability,
+                "name": "🌍 Availability",
+                "value": availability_text(availability),
                 "inline": True
             }
         ],
-        "url": URL,
+
         "image": {
-            "url": image
+            "url": fix_image_url(image)
         },
+
         "footer": {
-            "text": "IGN Rewards Notifier"
-        }
+            "text": "Subho's IGN Rewards Informer",
+            "icon_url": FOOTER_ICON
+        },
+
+        "timestamp": datetime.now().astimezone().isoformat(),
+
+        "url": URL
     }
 
-    requests.post(
-        WEBHOOK,
-        json={
-            "embeds": [embed]
-        },
-        timeout=30
-    )
+    try:
+        response = requests.post(
+            WEBHOOK,
+            json={
+                "embeds": [embed]
+            },
+            timeout=30
+        )
 
+        if response.status_code not in (200, 204):
+            print(
+                f"Discord webhook failed "
+                f"({response.status_code})"
+            )
+            print(response.text)
+
+    except Exception as e:
+        print("Discord Error:", e)
+
+    # ==========================
+# Main
+# ==========================
 
 print("Downloading IGN Rewards...")
 
-response = requests.get(URL, headers=HEADERS, timeout=30)
+response = requests.get(
+    URL,
+    headers=HEADERS,
+    timeout=30
+)
+
 response.raise_for_status()
 
 soup = BeautifulSoup(response.text, "lxml")
@@ -104,18 +233,36 @@ for card in cards:
         print(f"Skipping: {reward}")
         continue
 
+    image_url = ""
+
+    if image:
+        image_url = image.get("src", "")
+
+    end = (
+        end_date.get_text(strip=True)
+        if end_date
+        else "Unknown"
+    )
+
+    region = (
+        availability.get_text(strip=True)
+        if availability
+        else "Unknown"
+    )
+
     print(f"NEW: {reward}")
 
     send_discord(
         reward,
-        image.get("src") if image else "",
-        end_date.get_text(strip=True) if end_date else "Unknown",
-        availability.get_text(strip=True) if availability else "Unknown"
+        image_url,
+        end,
+        region
     )
 
     posted.append(reward)
+
     new_count += 1
 
 save_posted(posted)
 
-print(f"\nPosted {new_count} new rewards.")
+print(f"\nPosted {new_count} new reward(s).")
