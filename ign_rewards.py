@@ -138,13 +138,12 @@ def send_discord(title, image, end_date, availability):
 
     embed = {
         "author": {
-            "name": "IGN Rewards",
-            "url": URL,
-            "icon_url": AUTHOR_ICON
-        },
+    "name": "IGN Rewards",
+    "icon_url": AUTHOR_ICON
+},
 
-        "description": f"## 🎁 {title}",
-
+"title": f"🎁 {title}",
+"url": URL,
         "color": EMBED_COLOR,
 
         "fields": [
@@ -154,7 +153,7 @@ def send_discord(title, image, end_date, availability):
                 "inline": True
             },
             {
-                "name": "🌍 Availability",
+                "name": "Availability",
                 "value": availability_text(availability),
                 "inline": True
             }
